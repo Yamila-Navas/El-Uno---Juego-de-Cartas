@@ -98,6 +98,8 @@ mazo = [
 ]
 
 
+
+
 #listas de posibilidades de juego por color:
 conbinaciones_posibles = [[mas_2_amarillo, saltomarillo, sentido_contrariomarillo, amarillo_0, amarillo_1, amarillo_2, amarillo_3, amarillo_4, amarillo_5, amarillo_6, amarillo_7, amarillo_8, amarillo_9, mas_4_colores,
     cambio_color],[mas_2_azul, saltozul, sentido_contrario_azul, azul_0, azul_1, azul_2, azul_3, azul_4, azul_5, azul_6, azul_7, azul_8, azul_9, mas_4_colores,
@@ -111,12 +113,12 @@ conbinaciones_posibles = [[mas_2_amarillo, saltomarillo, sentido_contrariomarill
 #------------------------------------------------------------------------------------------------
 
 
+
 class Mazos(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.mazo = mazo
-        self.jugadas = [] #------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-        #self.ultimaJugada = self.jugadas[len(self.jugadas)-1]
+        self.descarte = base #va a ir cambiando y actualizandose
         self.ultimaDelMazo = self.mazo[0]
 
     def mezclar_mazo(self):
@@ -125,12 +127,13 @@ class Mazos(pygame.sprite.Sprite):
     def iniciar_jugada(self, jugadores):
         #colocar la primera carta del juego:
         carta = self.mazo.pop(0)
-        self.jugadas.append(carta)
-        print('en la clase mazos:',self.jugadas)
+        self.descarte = carta
         
-        # Actualizar la lista jugadas de los jugadores
+        # Actualizar la carta descarte de los jugadores
         for jugador in jugadores:
-            jugador.jugadas = self.jugadas
+            jugador.descarte = self.descarte
+            
+            
 
 
 class JugadorUno(Mazos):
@@ -146,26 +149,44 @@ class JugadorUno(Mazos):
 
 
     def sumar_carta(self):
-        carta = self.mazo.pop(0) # de 0 iniciamos a la inversa del maso
-        self.cartas.append(carta)
+        
+        conbinable = False
+        for carta in self.cartas:
+
+            for lista in conbinaciones_posibles:
+                if carta in lista and self.descarte in lista:
+                    conbinable = True
+                    break
+        
+        if conbinable == False:
+            carta = self.mazo.pop(0) # de 0 iniciamos a la inversa del maso
+            self.cartas.append(carta)
+        
+        # Actualizar la carta descarte de los jugadores
+        for jugador in jugadores:
+            jugador.cartas = self.cartas
     
 
-    def jugar(self, index):
-        print('en la clase J1, jugar:',self.jugadas) #---------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-        cartaDelMaso = self.jugadas[len(self.jugadas) - 1]
-        cartaDelJugador = self.cartas[index]
+    def jugar(self, index, jugadores):
+        
+        carta = self.cartas[index]
 
         conbinable = False
 
         for lista in conbinaciones_posibles:
-            if cartaDelJugador in lista and cartaDelMaso in lista:
+            if carta in lista and self.descarte in lista:
                 conbinable = True
-                print(conbinable)
+                #print(conbinable)
                 break
         
         if conbinable:
             carta = self.cartas.pop(index)  # Eliminar la carta seleccionada por jugador uno
-            self.jugadas.append(carta)  # Agregar la carta a la lista de jugadas
+            self.descarte = carta  # descarta la carta
+        
+            # Actualizar la carta descarte de los jugadores
+            for jugador in jugadores:
+                jugador.descarte = self.descarte
+        
 
     
     
@@ -192,23 +213,10 @@ x_Uno = 100
 y_Uno = 50
 
 # Crear una lista de jugadores y agregar a jugadorUno
-jugadores = [jugadorUno]
+jugadores = [jugadorUno, mazos]
 
 # Iniciar la jugada pasando la lista de jugadores
 mazos.iniciar_jugada(jugadores)
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -222,7 +230,9 @@ while True:
             index = (x - 100) // 100  # Calcular el índice de la carta seleccionada
             
             if 0 <= index < len(jugadorUno.cartas):
-                jugadorUno.jugar(index)
+                jugadorUno.jugar(index, jugadores)
+                
+
 
     
 
@@ -234,9 +244,9 @@ while True:
         
 
 
-    #maso de cartas de las jugadas:
-    for carta in mazos.jugadas:
-        screen.blit(carta,(450,234))
+    #maso de cartas descartadas:
+    #for carta in mazos.descartadas:
+    screen.blit(mazos.descarte,(450,234))
 
 
 
